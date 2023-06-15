@@ -44,9 +44,3 @@ class OpenVPN:
 
     def __exit__(self, *args):
         self.disconnect()
-
-
-with OpenVPN() as ovpn:
-    ovpn.connect("profile.ovpn", "romanticking95@gmail.com", "ZEEN12345678!@#$")
-    print("test")
-    time.sleep(120)
