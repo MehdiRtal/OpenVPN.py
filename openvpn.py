@@ -1,7 +1,6 @@
 import subprocess
 import os
 import time
-import requests
 
 
 class OpenVPN:
@@ -15,13 +14,12 @@ class OpenVPN:
         else:
             raise Exception("OpenVPN is not installed.")
         self.process = os.path.join(self.path, "openvpn.exe")
-        self.ip_adress = requests.get("https://api64.ipify.org/").text
 
-    def connect(self, profile_path: str, username: str = None, password: str = None, retries: int = 60, *args):
+    def connect(self, profile_path: str, username: str = None, password: str = None, *args):
         if username and password:
             with open("auth.txt", "w") as f:
                 f.write(f"{username}\n{password}")
-        subprocess.Popen([
+        process = subprocess.Popen([
             self.process,
             "--config",
             os.path.abspath(profile_path),
@@ -29,19 +27,16 @@ class OpenVPN:
             os.path.abspath("auth.txt") if username and password else None,
             "--auth-nocache",
             *args
-        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for _ in range(retries):
-            try:
-                if requests.get("https://api64.ipify.org/").text != self.ip_adress:
-                    return
-                time.sleep(1)
-            except:
-                pass
-        raise Exception("Failed to connect to VPN.")
-
-    def disconnect(self):
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        while True:
+            if process.poll():
+                raise Exception(process.stderr.read().strip())
+            elif "Initialization Sequence Completed" in process.stdout.readline().strip():
+                break
         if os.path.exists("auth.txt"):
             os.remove("auth.txt")
+
+    def disconnect(self):
         subprocess.Popen("taskkill /IM openvpn.exe /T /F", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
 
     def __enter__(self):
@@ -49,3 +44,9 @@ class OpenVPN:
 
     def __exit__(self, *args):
         self.disconnect()
+
+
+with OpenVPN() as ovpn:
+    ovpn.connect("profile.ovpn", "romanticking95@gmail.com", "ZEEN12345678!@#$")
+    print("test")
+    time.sleep(120)
