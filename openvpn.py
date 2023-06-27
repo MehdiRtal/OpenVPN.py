@@ -1,19 +1,21 @@
 import subprocess
 import os
-import time
 
 
 class OpenVPN:
     def __init__(self):
-        path_x64 = os.path.join("C:", os.sep, "Program Files", "OpenVPN", "bin")
-        path_x86 = os.path.join("C:", os.sep, "Program Files (x86)", "OpenVPN", "bin")
-        if os.path.exists(path_x64):
-            self.path = path_x64
-        elif os.path.exists(path_x86):
-            self.path = path_x86
-        else:
-            raise Exception("OpenVPN is not installed.")
-        self.process = os.path.join(self.path, "openvpn.exe")
+        if os.name == "nt":
+            path_x64 = os.path.join("C:", os.sep, "Program Files", "OpenVPN", "bin")
+            path_x86 = os.path.join("C:", os.sep, "Program Files (x86)", "OpenVPN", "bin")
+            if os.path.exists(path_x64):
+                self.path = path_x64
+            elif os.path.exists(path_x86):
+                self.path = path_x86
+            else:
+                raise Exception("OpenVPN is not installed.")
+            self.process = os.path.join(self.path, "openvpn.exe")
+        elif os.name == "posix":
+            self.process = "openvpn"
 
     def connect(self, profile_path: str, username: str = None, password: str = None, *args):
         if username and password:
@@ -37,7 +39,10 @@ class OpenVPN:
             os.remove("auth.txt")
 
     def disconnect(self):
-        subprocess.Popen("taskkill /IM openvpn.exe /T /F", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
+        if os.name == "nt":
+            subprocess.Popen("taskkill /IM openvpn.exe /T /F", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
+        elif os.name == "posix":
+            subprocess.Popen("pkill openvpn", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
 
     def __enter__(self):
         return self
