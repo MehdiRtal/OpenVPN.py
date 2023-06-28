@@ -30,7 +30,7 @@ class OpenVPN:
             os.path.abspath(profile_path),
             "--auth-user-pass" if username and password else None,
             os.path.abspath("auth.txt") if username and password else None,
-            "--auth-nocache",
+            "--auth-nocache" if username and password else None,
             *args
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         while True:
