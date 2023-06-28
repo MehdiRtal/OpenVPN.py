@@ -15,6 +15,9 @@ class OpenVPN:
                 raise Exception("OpenVPN is not installed.")
             self.process = os.path.join(self.path, "openvpn.exe")
         elif os.name == "posix":
+            process = subprocess.Popen("dpkg -s openvpn", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).wait()
+            if process == 1:
+                raise Exception("OpenVPN is not installed.")
             self.process = "openvpn"
 
     def connect(self, profile_path: str, username: str = None, password: str = None, *args):
